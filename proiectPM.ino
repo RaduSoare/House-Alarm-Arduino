@@ -155,7 +155,7 @@ void loop() {
           if (current_digit_input == password[current_password_digit]) {
             Serial.println("Correct digit!");
           } else {
-            Serial.println("Alarm!!!!!!");
+            Serial.println("Alarm");
             delay(100);
             exit(-1);
           }
