@@ -39,6 +39,8 @@ int password[] = {3, 7, 1, 9};
 int current_password_digit = 0;
 int motion_detected = 0;
 
+unsigned long myTime = 0;
+
 void setup() {
   pinMode(PIR_SENSOR, INPUT); // Set PIR Pin as input
   
@@ -50,6 +52,8 @@ void setup() {
   irrecv.enableIRIn(); // start IR receiver
   
   Serial.begin(9600); 
+
+  
 }
 
 void get_ultrasonic_data() {
@@ -84,7 +88,7 @@ void get_pir_data() {
       if (PIR_state == LOW) {
         //Serial.println(servo_position);
         Serial.println("PIR Motion detected!");
-        motion_detected = 1;
+       // motion_detected = 1;
         // Serial.println(millis() / 1000);
         PIR_state = HIGH;
         delay(10);
@@ -104,7 +108,7 @@ void loop() {
   if (motion_detected == 0) {
      
     
-    for (servo_position = 0; servo_position <= 180; servo_position += 1) { // goes from 0 degrees to 180 degrees
+    for (servo_position = 0; servo_position <= 45; servo_position += 1) { // goes from 0 degrees to 180 degrees
       // in steps of 1 degree
       myservo.write(servo_position);              // tell servo to go to position in variable 'servo_position'
       get_ultrasonic_data();
@@ -115,24 +119,37 @@ void loop() {
         myservo.write(0); 
         break;
       }
-      delay(50);                       // waits 15ms for the servo to reach the position
+      delay(30);                       // waits 15ms for the servo to reach the position
     }
-    for (servo_position = 180; servo_position >= 0; servo_position -= 1) { // goes from 180 degrees to 0 degrees
+    for (servo_position = 45; servo_position >= 0; servo_position -= 1) { // goes from 180 degrees to 0 degrees
       myservo.write(servo_position);              // tell servo to go to position in variable 'servo_position'
       get_ultrasonic_data();
       delay(10);
       get_pir_data();
       if (motion_detected == 1) {
+  
         myservo.write(0); 
         break;
       }
-      delay(50);                       // waits 15ms for the servo to reach the position
+      delay(30);                       // waits 15ms for the servo to reach the position
     }
   
     
   } else {
       //Serial.println("Motion detected!");
-  
+      myTime = millis();
+      if ( motion_detected == 1) {
+        
+        if ((myTime / 1000) > 40) {
+          Serial.println("Alarm");
+          delay(100);
+          exit(-1);
+        }
+      }
+      
+
+      
+      
       if (irrecv.decode(&remote_results)) {
         int current_digit_input = 0;
         switch(remote_results.value) {
@@ -161,10 +178,11 @@ void loop() {
           }
           current_password_digit++;
           if (current_password_digit == 4) {
-            Serial.println("Alarm deactivated!");
+            Serial.println("Deactivated");
+            
             delay(100);
-            current_password_digit = 0;
-            motion_detected = 0;
+            exit(-1);
+            // Opreste sistemul dupa ce alarma a fost dezactivata
           }
         } else {
           Serial.println("Insert digit again!");

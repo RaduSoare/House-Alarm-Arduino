@@ -31,6 +31,9 @@ while True:
 			print('Send email!')
 			#send_email()
 			exit(0)
+		elif data.decode('utf-8') == 'Deactivated':
+			print('Alarm deactivated!')
+			exit(0)
 		else:
 			print(data)
 
