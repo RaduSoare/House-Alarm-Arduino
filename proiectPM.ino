@@ -34,6 +34,10 @@ const int IR_RECEIVER = 11;
 IRrecv irrecv(IR_RECEIVER); // creeaza o instanta a receiverului
 decode_results remote_results;
 
+// LED defines
+
+const int LED = 12;
+
 
 int password[] = {3, 7, 1, 9};
 int current_password_digit = 0;
@@ -50,7 +54,9 @@ void setup() {
   myservo.attach(SERVO_MOTOR);  // attaches the servo on pin 9 to the servo object
 
   irrecv.enableIRIn(); // start IR receiver
-  
+
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, LOW);
   Serial.begin(9600); 
 
   
@@ -116,6 +122,7 @@ void loop() {
       get_pir_data();
       
       if (motion_detected == 1) {
+        //myTime = millis();
         myservo.write(0); 
         break;
       }
@@ -127,7 +134,8 @@ void loop() {
       delay(10);
       get_pir_data();
       if (motion_detected == 1) {
-  
+        Serial.println("Aici");
+        
         myservo.write(0); 
         break;
       }
@@ -137,11 +145,14 @@ void loop() {
     
   } else {
       //Serial.println("Motion detected!");
-      myTime = millis();
+      //myTime = millis();
+      static int startedTime = millis();
+      digitalWrite(LED, HIGH);
       if ( motion_detected == 1) {
-        
-        if ((myTime / 1000) > 40) {
+        //Serial.println((String)((millis() - startedTime)  / 1000));
+        if (((millis() - startedTime)  / 1000) > 20) {
           Serial.println("Alarm");
+          digitalWrite(LED, LOW);
           delay(100);
           exit(-1);
         }
@@ -173,13 +184,14 @@ void loop() {
             Serial.println("Correct digit!");
           } else {
             Serial.println("Alarm");
+            digitalWrite(LED, LOW);
             delay(100);
             exit(-1);
           }
           current_password_digit++;
           if (current_password_digit == 4) {
             Serial.println("Deactivated");
-            
+            digitalWrite(LED, LOW);
             delay(100);
             exit(-1);
             // Opreste sistemul dupa ce alarma a fost dezactivata
