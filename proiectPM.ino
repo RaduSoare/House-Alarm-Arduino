@@ -35,12 +35,12 @@ IRrecv irrecv(IR_RECEIVER); // creeaza o instanta a receiverului
 decode_results remote_results;
 
 // LED defines
-
 const int LED = 12;
 
 
 int password[] = {3, 7, 1, 9};
 int current_password_digit = 0;
+int wrong_password_count = 3;
 int motion_detected = 0;
 
 unsigned long myTime = 0;
@@ -182,13 +182,21 @@ void loop() {
           Serial.println("Ai introdus: " + (String)current_digit_input);
           if (current_digit_input == password[current_password_digit]) {
             Serial.println("Correct digit!");
+            current_password_digit++;
           } else {
-            Serial.println("Alarm");
-            digitalWrite(LED, LOW);
-            delay(100);
-            exit(-1);
+            current_password_digit = 0;
+            wrong_password_count--; 
+            // Cand greseste parola a treia oara se declanseaza alarma
+            if (wrong_password_count == 0) {
+              Serial.println("Alarm");
+              digitalWrite(LED, LOW);
+              delay(100);
+              exit(-1);
+            }
+            Serial.println("Parola gresita! Mai ai " + (String)wrong_password_count + " incercari");
+            
           }
-          current_password_digit++;
+          
           if (current_password_digit == 4) {
             Serial.println("Deactivated");
             digitalWrite(LED, LOW);

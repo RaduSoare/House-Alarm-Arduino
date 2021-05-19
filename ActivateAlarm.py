@@ -29,7 +29,7 @@ while True:
 	if data:
 		if data.decode('utf-8') == 'Alarm':
 			print('Send email!')
-			#send_email()
+			send_email()
 			exit(0)
 		elif data.decode('utf-8') == 'Deactivated':
 			print('Alarm deactivated!')
