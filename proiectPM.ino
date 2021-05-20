@@ -2,7 +2,7 @@
 #include <IRremote.h>
 
 // PIR defines 
-const int PIR_SENSOR = 3; // Citesc de pe PIN-ul 3 valoarea PIR-ului
+const int PIR_SENSOR = 3;
 int PIR_state = LOW;
 int PIR_value = 0;
 
@@ -31,19 +31,19 @@ int servo_position = 0; // variable to store the servo position
 #define Button_9 0x3EC3FC1B
 
 const int IR_RECEIVER = 11;
-IRrecv irrecv(IR_RECEIVER); // creeaza o instanta a receiverului
+IRrecv irrecv(IR_RECEIVER); // creeaza a receiver instance
 decode_results remote_results;
 
 // LED defines
 const int LED = 12;
 
-
+// Password for alarm deactivation
 int password[] = {3, 7, 1, 9};
 int current_password_digit = 0;
 int wrong_password_count = 3;
 int motion_detected = 0;
+const int TIME_LIMIT = 20; // seconds
 
-unsigned long myTime = 0;
 
 void setup() {
   pinMode(PIR_SENSOR, INPUT); // Set PIR Pin as input
@@ -57,14 +57,15 @@ void setup() {
 
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
+  
   Serial.begin(9600); 
 
   
 }
 
+/* GET DATA FROM ULTRASONIC SENSOR */
 void get_ultrasonic_data() {
-   // GET DATA FROM ULTRASONIC SENSOR
-    /* Calibrate ultrasonic sensor */
+   
     // Clears the ULTRASONIC_SENSOR_TRIG
     digitalWrite(ULTRASONIC_SENSOR_TRIG, LOW);
     delay(10);
@@ -76,34 +77,26 @@ void get_ultrasonic_data() {
     // Reads the echoPin, returns the sound wave travel time in microseconds
     duration = pulseIn(ULTRASONIC_SENSOR_ECHO, HIGH);
     // Calculating the distance
-    distance= duration*0.034/2;
+    distance = duration*0.034/2;
     // Prints the distance on the Serial Monitor
-    //Serial.print("Distance: ");
-    //Serial.println(servo_position);
-    //Serial.println(distance);
     if (distance > 0 && distance < MAX_DISTANCE_ALLOWED) {
-      //Serial.println("Ultrrasonic Motion detected!");
        Serial.println("Motion detected!");
       motion_detected = 1;
     }
 }
 
+// GET DATA FROM MOTION SENSOR
 void get_pir_data() {
-  // GET DATA FROM MOTION SENSOR
     PIR_value = digitalRead(PIR_SENSOR);
     if (PIR_value == HIGH) {
       if (PIR_state == LOW) {
-        //Serial.println(servo_position);
-         Serial.println("Motion detected!");
-       // motion_detected = 1;
-        // Serial.println(millis() / 1000);
+        Serial.println("Motion detected!");
+        motion_detected = 1;
         PIR_state = HIGH;
         delay(10);
       }
     } else {
         if (PIR_state == HIGH){
-          //Serial.println(servo_position);
-          //Serial.println("Motion stopped!");
           PIR_state = LOW;
           delay(10);
       }
@@ -111,13 +104,12 @@ void get_pir_data() {
 }
 
 void loop() {
-  
+
+  // While motion was not detected, read data from sensors
   if (motion_detected == 0) {
      
-    
-    for (servo_position = 0; servo_position <= 45; servo_position += 1) { // goes from 0 degrees to 180 degrees
-      // in steps of 1 degree
-      myservo.write(servo_position);              // tell servo to go to position in variable 'servo_position'
+    for (servo_position = 0; servo_position <= 45; servo_position += 1) {
+      myservo.write(servo_position); // tell servo to go to position in variable 'servo_position'
       get_ultrasonic_data();
       delay(10);
       get_pir_data();
@@ -126,10 +118,10 @@ void loop() {
         myservo.write(0); 
         break;
       }
-      delay(30);                       // waits 15ms for the servo to reach the position
+      delay(30); // waits 30ms for the servo to reach the position
     }
-    for (servo_position = 45; servo_position >= 0; servo_position -= 1) { // goes from 180 degrees to 0 degrees
-      myservo.write(servo_position);              // tell servo to go to position in variable 'servo_position'
+    for (servo_position = 45; servo_position >= 0; servo_position -= 1) {
+      myservo.write(servo_position); // tell servo to go to position in variable 'servo_position'
       get_ultrasonic_data();
       delay(10);
       get_pir_data();
@@ -137,28 +129,29 @@ void loop() {
         myservo.write(0); 
         break;
       }
-      delay(30);                       // waits 15ms for the servo to reach the position
+      delay(30); // waits 30ms for the servo to reach the position
     }
   
     
   } else {
      
-
+      // Count seconds from alarm activation
       static int startedTime = millis();
+      
+      // Mark alarm activation with the LED
       digitalWrite(LED, HIGH);
+      
       if ( motion_detected == 1) {
-        //Serial.println((String)((millis() - startedTime)  / 1000));
-        if (((millis() - startedTime)  / 1000) > 20) {
+        // When the TIME_LIMIT (seconds) have elapsed, the alarm is triggered
+        if (((millis() - startedTime)  / 1000) > TIME_LIMIT) {
           Serial.println("Alarm");
           digitalWrite(LED, LOW);
           delay(100);
           exit(-1);
         }
       }
-      
 
-      
-      
+      // Get user input from IR remote
       if (irrecv.decode(&remote_results)) {
         int current_digit_input = 0;
         switch(remote_results.value) {
@@ -174,7 +167,8 @@ void loop() {
           case Button_9: current_digit_input = 9; break;
           default : current_digit_input = -1; break;
         }
-        //Serial.println(current_digit_input);
+        
+        // Check for unaltered digit from remote 
         if (current_digit_input != -1) {
           Serial.println("Insert digit number: " + (String)current_password_digit);
           Serial.println("Ai introdus: " + (String)current_digit_input);
@@ -184,14 +178,14 @@ void loop() {
           } else {
             current_password_digit = 0;
             wrong_password_count--; 
-            // Cand greseste parola a treia oara se declanseaza alarma
+            // When the password is wrong for the third time, the alarm in triggered
             if (wrong_password_count == 0) {
               Serial.println("Alarm");
               digitalWrite(LED, LOW);
               delay(100);
               exit(-1);
             }
-            Serial.println("Parola gresita! Mai ai " + (String)wrong_password_count + " incercari");
+            Serial.println("Wrong password! You have " + (String)wrong_password_count + " more attempts");
             
           }
           
@@ -200,12 +194,12 @@ void loop() {
             digitalWrite(LED, LOW);
             delay(100);
             exit(-1);
-            // Opreste sistemul dupa ce alarma a fost dezactivata
+            // System is shut down when the alarm is deactivated
           }
         } else {
           Serial.println("Insert digit again!");
         }
-        irrecv.resume(); // obtine urmatoarea valoarea
+        irrecv.resume(); // get next value
     }
   }
 
