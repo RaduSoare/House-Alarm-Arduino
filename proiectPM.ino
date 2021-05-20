@@ -82,7 +82,8 @@ void get_ultrasonic_data() {
     //Serial.println(servo_position);
     //Serial.println(distance);
     if (distance > 0 && distance < MAX_DISTANCE_ALLOWED) {
-      Serial.println("Ultrrasonic Motion detected!");
+      //Serial.println("Ultrrasonic Motion detected!");
+       Serial.println("Motion detected!");
       motion_detected = 1;
     }
 }
@@ -93,7 +94,7 @@ void get_pir_data() {
     if (PIR_value == HIGH) {
       if (PIR_state == LOW) {
         //Serial.println(servo_position);
-        Serial.println("PIR Motion detected!");
+         Serial.println("Motion detected!");
        // motion_detected = 1;
         // Serial.println(millis() / 1000);
         PIR_state = HIGH;
@@ -122,7 +123,6 @@ void loop() {
       get_pir_data();
       
       if (motion_detected == 1) {
-        //myTime = millis();
         myservo.write(0); 
         break;
       }
@@ -134,8 +134,6 @@ void loop() {
       delay(10);
       get_pir_data();
       if (motion_detected == 1) {
-        Serial.println("Aici");
-        
         myservo.write(0); 
         break;
       }
@@ -144,8 +142,8 @@ void loop() {
   
     
   } else {
-      //Serial.println("Motion detected!");
-      //myTime = millis();
+     
+
       static int startedTime = millis();
       digitalWrite(LED, HIGH);
       if ( motion_detected == 1) {

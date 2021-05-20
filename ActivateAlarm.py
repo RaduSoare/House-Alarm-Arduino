@@ -1,11 +1,13 @@
 import smtplib, ssl
 import serial
+from getpass import getpass
 
 port = 587  # For starttls
 smtp_server = "smtp.gmail.com"
 sender_email = "srgdevelopement@gmail.com"
 receiver_email = "radus932@gmail.com"
-password = input("Type your password and press enter: ")
+#password = input("Type your password and press enter: ")
+password = getpass()
 message = """\
 Subject: Security issue
 
@@ -35,7 +37,7 @@ while True:
 			print('Alarm deactivated!')
 			exit(0)
 		else:
-			print(data)
+			print(data.decode('utf-8'))
 
 
 
