@@ -4,8 +4,8 @@ from getpass import getpass
 
 port = 587  # For starttls
 smtp_server = "smtp.gmail.com"
-sender_email = "srgdevelopement@gmail.com"
-receiver_email = "radus932@gmail.com"
+sender_email = ""
+receiver_email = ""
 #password = input("Type your password and press enter: ")
 password = getpass()
 message = """\
